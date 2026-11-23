@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizarra Digital Interactiva - Colegio Montano</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tone.js para síntesis de audio interactiva en la pizarra -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        montanoAzul: '#1269A8',
+                        montanoAmarillo: '#F7D615',
+                        montanoVerdeGris: '#54887D',
+                        montanoAzulClaro: '#88B5C7',
+                        montanoVerdeOliva: '#A6B046',
+                        montanoFondo: '#F2F5E9',
+                    },
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Tahoma', 'Verdana', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F2F5E9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        .board-card {
+            background: #ffffff;
+            border: 3px solid #1269A8;
+            box-shadow: 6px 6px 0px #54887D;
+        }
+        .tab-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-btn.active {
+            background-color: #1269A8 !important;
+            color: #ffffff !important;
+            border-bottom: 4px solid #F7D615 !important;
+            transform: translateY(-2px);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F2F5E9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #54887D;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-800">
+
+    <header class="bg-montanoAzul text-white shadow-lg sticky top-0 z-50 border-b-4 border-montanoAmarillo">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <!-- Logo e Identidad -->
+            <div class="flex items-center space-x-3">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQyEop0yf6lZ7Jk9MILZxF1rBj4Oqs5esyhIQ&s" 
+                     alt="Colegio Montano" 
+                     class="h-12 w-auto bg-white p-1 rounded-lg border-2 border-montanoAmarillo shadow"
+                     onerror="this.src='https://placehold.co/100x100/1269A8/FFFFFF?text=Montano'">
+                <div>
+                    <h1 class="font-bold text-xl md:text-2xl leading-tight tracking-wide text-montanoAmarillo">COLEGIO MONTANO</h1>
+                    <p class="text-xs md:text-sm text-montanoAzulClaro font-medium">Pizarra Digital Interactiva - Plan Diario de Clase</p>
+                </div>
+            </div>
+
+            <!-- Datos del Plan -->
+            <div class="hidden lg:flex items-center space-x-6 text-xs md:text-sm bg-montanoVerdeGris px-4 py-2 rounded-xl border border-montanoAzulClaro">
+                <div><span class="text-montanoAmarillo font-bold">Curso:</span> Formación Musical</div>
+                <div><span class="text-montanoAmarillo font-bold">Grado:</span> 1.º Primaria</div>
+                <div><span class="text-montanoAmarillo font-bold">Docente:</span> Prof. Nemecio Cutzán</div>
+                <div><span class="text-montanoAmarillo font-bold">Fecha:</span> Marzo 2027</div>
+            </div>
+
+            <!-- Botones de Acción Header -->
+            <div class="flex items-center space-x-2">
+                <button onclick="toggleFullscreen()" class="bg-montanoAmarillo hover:bg-yellow-400 text-montanoAzul font-bold px-4 py-2 rounded-lg shadow flex items-center gap-2 transition hover:scale-105 active:scale-95 text-sm">
+                    <i id="fullscreen-icon" class="fa-solid fa-expand"></i>
+                    <span id="fullscreen-text" class="hidden sm:inline">Pantalla Completa</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="bg-white border-b-2 border-montanoAzulClaro px-4 py-3 shadow-inner">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-3 text-xs md:text-sm">
+            <div class="bg-montanoFondo p-2.5 rounded-lg border-l-4 border-montanoAzul">
+                <span class="font-bold text-montanoAzul block"><i class="fa-solid fa-bullseye mr-1"></i> Competencia CNB:</span>
+                <p class="text-gray-700">Demuestra destreza rítmica y auditiva mediante el ensamble instrumental orquestal y la discriminación de timbres simples.</p>
+            </div>
+            <div class="bg-montanoFondo p-2.5 rounded-lg border-l-4 border-montanoVerdeOliva">
+                <span class="font-bold text-montanoVerdeOliva block"><i class="fa-solid fa-check-double mr-1"></i> Logro de Aprendizaje:</span>
+                <p class="text-gray-700">Sigue el pulso y acento rítmico coordinando su instrumento con sus compañeros durante el ensayo en conjunto.</p>
+            </div>
+            <div class="bg-montanoFondo p-2.5 rounded-lg border-l-4 border-montanoAmarillo">
+                <span class="font-bold text-gray-800 block"><i class="fa-solid fa-star text-montanoAmarillo mr-1"></i> Hábitos Montano & Habilidades:</span>
+                <p class="text-gray-700"><span class="font-semibold text-montanoAzul">Sinergizar</span> (Trabajo en equipo) y <span class="font-semibold text-montanoAzul">Comenzar con un fin en mente</span>.</p>
+            </div>
+        </div>
+    </section>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col">
+        <!-- Navegación por Pestañas -->
+        <nav class="flex flex-wrap gap-2 mb-4 border-b-2 border-montanoAzul shadow-sm bg-white p-2 rounded-t-xl">
+            <button onclick="switchTab('tab1')" id="btn-tab1" class="tab-btn active flex-1 min-w-[140px] px-4 py-3 rounded-lg font-bold text-sm text-montanoAzul bg-gray-100 hover:bg-montanoAzulClaro hover:text-white flex items-center justify-center gap-2">
+                <i class="fa-solid fa-bolt text-montanoAmarillo"></i>
+                <span>I) Inicio Motivante</span>
+                <span class="text-xs bg-montanoAzul text-white px-2 py-0.5 rounded-full">5 min</span>
+            </button>
+            <button onclick="switchTab('tab2')" id="btn-tab2" class="tab-btn flex-1 min-w-[140px] px-4 py-3 rounded-lg font-bold text-sm text-montanoAzul bg-gray-100 hover:bg-montanoAzulClaro hover:text-white flex items-center justify-center gap-2">
+                <i class="fa-solid fa-user"></i>
+                <span>II) Trabajo Individual</span>
+                <span class="text-xs bg-montanoAzul text-white px-2 py-0.5 rounded-full">20 min</span>
+            </button>
+            <button onclick="switchTab('tab3')" id="btn-tab3" class="tab-btn flex-1 min-w-[140px] px-4 py-3 rounded-lg font-bold text-sm text-montanoAzul bg-gray-100 hover:bg-montanoAzulClaro hover:text-white flex items-center justify-center gap-2">
+                <i class="fa-solid fa-users"></i>
+                <span>III) Trabajo Cooperativo</span>
+                <span class="text-xs bg-montanoAzul text-white px-2 py-0.5 rounded-full">30 min</span>
+            </button>
+            <button onclick="switchTab('tab4')" id="btn-tab4" class="tab-btn flex-1 min-w-[140px] px-4 py-3 rounded-lg font-bold text-sm text-montanoAzul bg-gray-100 hover:bg-montanoAzulClaro hover:text-white flex items-center justify-center gap-2">
+                <i class="fa-solid fa-gavel"></i>
+                <span>IV) Plenaria / Juego</span>
+                <span class="text-xs bg-montanoAzul text-white px-2 py-0.5 rounded-full">15 min</span>
+            </button>
+        </nav>
+
+        <!-- CONTENEDOR DE CONTENIDO DE LAS PESTAÑAS -->
+        <div class="board-card rounded-b-xl rounded-t-sm p-4 sm:p-6 flex-grow flex flex-col justify-between">
+            
+            <div id="tab1" class="tab-content flex-col space-y-6">
+                <div class="flex items-center justify-between border-b-2 border-montanoAzulClaro pb-3">
+                    <h2 class="text-2xl font-bold text-montanoAzul flex items-center gap-3">
+                        <i class="fa-solid fa-music text-montanoAmarillo bg-montanoAzul p-2 rounded-lg"></i>
+                        Momento I: Introducción Motivante y Calentamiento Orquestal
+                    </h2>
+                    <span class="bg-montanoAmarillo text-montanoAzul font-bold px-3 py-1 rounded-full text-xs">Evaluación Diagnóstica</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Dinámica de Entrada -->
+                    <div class="bg-montanoFondo p-5 rounded-xl border border-montanoVerdeGris space-y-3">
+                        <h3 class="font-bold text-lg text-montanoVerdeGris flex items-center gap-2">
+                            <i class="fa-solid fa-drum"></i> Dinámica: "El Director Silencioso"
+                        </h3>
+                        <p class="text-sm leading-relaxed text-gray-700">
+                            El docente asume el rol de Director de Orquesta sin hablar. Mediante gestos simples, guía a los estudiantes de 1.º Primaria para marcar el silencio, aplaudir rápido (Allegro) o despacio (Lento).
+                        </p>
+                        <div class="bg-white p-3 rounded-lg border border-montanoAzulClaro text-xs space-y-1">
+                            <span class="font-bold text-montanoAzul"><i class="fa-solid fa-lightbulb text-montanoAmarillo"></i> Hábito Montano en acción:</span>
+                            <p><strong>"Buscar primero entender, luego ser entendido"</strong> - Los niños observan atentos la batuta antes de reaccionar sonoramente.</p>
+                        </div>
+                    </div>
+
+                    <!-- Herramienta Interactiva: Metrónomo y Afinador Didáctico -->
+                    <div class="bg-white p-5 rounded-xl border-2 border-montanoAzul space-y-4 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-lg text-montanoAzul flex items-center gap-2">
+                                <i class="fa-solid fa-stopwatch text-montanoVerdeOliva"></i>
+                                Metrónomo Didáctico para el Calentamiento
+                            </h3>
+                            <p class="text-xs text-gray-600 mt-1">Establece el pulso inicial antes de comenzar a tocar con los instrumentos de percusión/xilófonos.</p>
+                        </div>
+
+                        <div class="flex items-center justify-center space-x-6 py-4 bg-montanoFondo rounded-xl border border-gray-200">
+                            <button id="metro-btn" onclick="toggleMetronome()" class="bg-montanoAzul hover:bg-montanoVerdeGris text-white font-bold px-6 py-3 rounded-xl shadow-md transition flex items-center gap-2 text-lg">
+                                <i class="fa-solid fa-play"></i> <span id="metro-txt">Iniciar Pulso</span>
+                            </button>
+                            <div class="text-center">
+                                <span id="bpm-display" class="text-3xl font-black text-montanoAzul">80</span>
+                                <span class="text-xs text-gray-500 block font-bold">BPM (Negra)</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-solid fa-gauge-simple-high text-montanoAzul"></i>
+                            <input type="range" id="bpm-slider" min="50" max="140" value="80" oninput="updateBPM(this.value)" class="w-full accent-montanoAzul">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pregunta Diagnóstica -->
+                <div class="bg-yellow-50 border-l-4 border-montanoAmarillo p-4 rounded-r-xl">
+                    <h4 class="font-bold text-sm text-gray-800"><i class="fa-solid fa-circle-question text-montanoAzul mr-1"></i> Pregunta Exploratoria de Aula:</h4>
+                    <p class="text-sm text-gray-700 italic mt-1">"¿Qué pasa si en una orquesta un músico toca muy rápido y otro muy despacio? ¿Por qué es importante escuchar al compañero?"</p>
+                </div>
+            </div>
+
+            <div id="tab2" class="tab-content hidden flex-col space-y-6">
+                <div class="flex items-center justify-between border-b-2 border-montanoAzulClaro pb-3">
+                    <h2 class="text-2xl font-bold text-montanoAzul flex items-center gap-3">
+                        <i class="fa-solid fa-music text-montanoAmarillo bg-montanoAzul p-2 rounded-lg"></i>
+                        Momento II: Trabajo Individual - Técnica y Lectura Rítmica (20 min)
+                    </h2>
+                    <span class="bg-montanoVerdeOliva text-white font-bold px-3 py-1 rounded-full text-xs">Práctica Guiada</span>
+                </div>
+
+                <p class="text-sm text-gray-700">
+                    Cada estudiante trabaja con su guía de percusión o xilófono individualmente. El objetivo es identificar las figuras musicales de <strong>Negra (Ta)</strong> y <strong>Par de Corcheas (Ti-Ti)</strong>.
+                </p>
+
+                <!-- Ejercicio Práctico Individual con Solución Oculta -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-xl border-2 border-montanoAzulClaro shadow-sm space-y-4">
+                        <h3 class="font-bold text-montanoAzul flex items-center gap-2">
+                            <i class="fa-solid fa-pen-ruler"></i> Ejercicio A: Descifra el Patrón Rítmico
+                        </h3>
+                        <p class="text-xs text-gray-600">
+                            Lee en voz alta y percute sobre la mesa los siguientes símbolos antes de ejecutarlos en tu instrumento.
+                        </p>
+                        
+                        <div class="bg-montanoFondo p-4 rounded-xl text-center space-y-2 border border-montanoVerdeGris">
+                            <span class="text-xs font-bold text-montanoVerdeGris block uppercase">Partitura del Ejercicio 1</span>
+                            <div class="text-2xl font-black tracking-widest text-montanoAzul flex justify-center items-center gap-4">
+                                <span>♩</span> <span>♩</span> <span>♫</span> <span>♩</span>
+                            </div>
+                            <p class="text-xs text-gray-500">(Negra - Negra - Corcheas - Negra)</p>
+                        </div>
+
+                        <!-- Botón Desplegable para Orientación / Solución Oculta -->
+                        <div class="border-t pt-3">
+                            <button onclick="toggleAccordion('sol1')" class="w-full text-left font-bold text-sm text-montanoAzul hover:text-montanoVerdeGris flex justify-between items-center bg-gray-50 p-2.5 rounded-lg border">
+                                <span><i class="fa-solid fa-eye mr-2 text-montanoAmarillo"></i> Ver Sílabas Rítmicas (Solución)</span>
+                                <i id="sol1-icon" class="fa-solid fa-chevron-down text-xs"></i>
+                            </button>
+                            <div id="sol1" class="hidden mt-3 p-3 bg-green-50 rounded-lg border border-montanoVerdeOliva text-xs text-gray-700 space-y-1">
+                                <p class="font-bold text-montanoVerdeOliva">Lectura Correcta:</p>
+                                <p class="text-base font-black text-montanoAzul">"TA  -  TA  -  TI-TI  -  TA"</p>
+                                <p class="text-gray-600"><em>Pista pedagógica: Recuerda que las corcheas (TI-TI) duran medio tiempo cada una y caben en un solo golpe de pulso.</em></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Piano/Xilófono Interactivo de Práctica Individual -->
+                    <div class="bg-white p-5 rounded-xl border-2 border-montanoAzul shadow-sm space-y-3 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-montanoAzul flex items-center gap-2">
+                                <i class="fa-solid fa-keyboard"></i> Mini Xilófono / Teclado Didáctico
+                            </h3>
+                            <p class="text-xs text-gray-600">Prueba los sonidos de tu instrumento virtual para comprobar la afinación:</p>
+                        </div>
+
+                        <div class="flex justify-center items-end space-x-2 py-4 bg-montanoFondo p-3 rounded-xl border">
+                            <button onclick="playNote('C4')" class="w-12 h-24 bg-red-500 hover:bg-red-600 text-white font-bold rounded-b-lg flex flex-col justify-between p-2 shadow active:scale-95 text-xs">
+                                <span>Do</span><span class="text-[10px]">C</span>
+                            </button>
+                            <button onclick="playNote('D4')" class="w-12 h-22 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-b-lg flex flex-col justify-between p-2 shadow active:scale-95 text-xs">
+                                <span>Re</span><span class="text-[10px]">D</span>
+                            </button>
+                            <button onclick="playNote('E4')" class="w-12 h-20 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-b-lg flex flex-col justify-between p-2 shadow active:scale-95 text-xs">
+                                <span>Mi</span><span class="text-[10px]">E</span>
+                            </button>
+                            <button onclick="playNote('F4')" class="w-12 h-18 bg-green-500 hover:bg-green-600 text-white font-bold rounded-b-lg flex flex-col justify-between p-2 shadow active:scale-95 text-xs">
+                                <span>Fa</span><span class="text-[10px]">F</span>
+                            </button>
+                            <button onclick="playNote('G4')" class="w-12 h-16 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-b-lg flex flex-col justify-between p-2 shadow active:scale-95 text-xs">
+                                <span>Sol</span><span class="text-[10px]">G</span>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-gray-500 text-center"><i class="fa-solid fa-circle-info"></i> Haz clic en las placas para escuchar el tono correspondiente.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab3" class="tab-content hidden flex-col space-y-6">
+                <div class="flex items-center justify-between border-b-2 border-montanoAzulClaro pb-3">
+                    <h2 class="text-2xl font-bold text-montanoAzul flex items-center gap-3">
+                        <i class="fa-solid fa-users text-montanoAmarillo bg-montanoAzul p-2 rounded-lg"></i>
+                        Momento III: Trabajo Cooperativo - Ensamble por Secciones (30 min)
+                    </h2>
+                    <span class="bg-montanoAzul text-white font-bold px-3 py-1 rounded-full text-xs">Evaluación Formativa</span>
+                </div>
+
+                <div class="bg-montanoFondo p-4 rounded-xl border border-montanoAzulClaro space-y-2">
+                    <h3 class="font-bold text-montanoAzul flex items-center gap-2 text-base">
+                        <i class="fa-solid fa-hands-holding-child"></i> Organización del Ensayo Orquestal
+                    </h3>
+                    <p class="text-xs text-gray-700 leading-relaxed">
+                        Se dividirá la clase en 3 grandes secciones de orquesta. Apliquen el Hábito Montano <strong>"Sinergizar"</strong>: Unirse para lograr una melodía perfecta en equipo.
+                    </p>
+                </div>
+
+                <!-- Roles y Equipos -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Sección 1 -->
+                    <div class="bg-white p-4 rounded-xl border-2 border-red-300 shadow-sm space-y-2">
+                        <div class="flex items-center justify-between text-red-600 font-bold border-b pb-2">
+                            <span><i class="fa-solid fa-drum mr-1"></i> Sección 1: Percusión Metal</span>
+                            <span class="text-xs bg-red-100 px-2 py-0.5 rounded">Triángulos y Cascabeles</span>
+                        </div>
+                        <p class="text-xs font-semibold text-gray-700">Rol: El Pulso Constante</p>
+                        <div class="bg-gray-50 p-2 rounded text-xs text-gray-600 font-mono">
+                            Patrón: ♩ - ♩ - ♩ - ♩
+                        </div>
+                        <p class="text-[11px] text-gray-500">Acompañan marcando cada tiempo de manera suave y regular.</p>
+                    </div>
+
+                    <!-- Sección 2 -->
+                    <div class="bg-white p-4 rounded-xl border-2 border-blue-300 shadow-sm space-y-2">
+                        <div class="flex items-center justify-between text-blue-600 font-bold border-b pb-2">
+                            <span><i class="fa-solid fa-align-left mr-1"></i> Sección 2: Percusión Madera</span>
+                            <span class="text-xs bg-blue-100 px-2 py-0.5 rounded">Claves y Cajas Chinas</span>
+                        </div>
+                        <p class="text-xs font-semibold text-gray-700">Rol: El Acento Rítmico</p>
+                        <div class="bg-gray-50 p-2 rounded text-xs text-gray-600 font-mono">
+                            Patrón: ♫ - ♫ - ♩ - ♩
+                        </div>
+                        <p class="text-[11px] text-gray-500">Responden al pulso con repiques rápidos y precisos.</p>
+                    </div>
+
+                    <!-- Sección 3 -->
+                    <div class="bg-white p-4 rounded-xl border-2 border-green-300 shadow-sm space-y-2">
+                        <div class="flex items-center justify-between text-green-600 font-bold border-b pb-2">
+                            <span><i class="fa-solid fa-[#54887D] mr-1"></i> Sección 3: Melódicos</span>
+                            <span class="text-xs bg-green-100 px-2 py-0.5 rounded">Xilófonos y Metalófonos</span>
+                        </div>
+                        <p class="text-xs font-semibold text-gray-700">Rol: La Melodía Principal</p>
+                        <div class="bg-gray-50 p-2 rounded text-xs text-gray-600 font-mono">
+                            Notas: Do - Re - Mi - Do
+                        </div>
+                        <p class="text-[11px] text-gray-500">Guían la melodía respetando la entrada del director.</p>
+                    </div>
+                </div>
+
+                <!-- Guía de Convivencia para el Ensayo -->
+                <div class="bg-white p-4 rounded-xl border border-montanoAmarillo flex items-center gap-4">
+                    <div class="bg-montanoAmarillo text-montanoAzul p-3 rounded-full font-black text-xl">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div class="text-xs text-gray-700 space-y-1">
+                        <span class="font-bold text-montanoAzul text-sm block">Consigna del Ensayo Cooperativo:</span>
+                        <p>1. Cada equipo nombra un <strong>"Mastro de Sección"</strong> que levantará la mano cuando el grupo esté listo.</p>
+                        <p>2. Si otra sección está tocando, practicamos en silencio haciendo mímica con las manos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab4" class="tab-content hidden flex-col space-y-6">
+                <div class="flex items-center justify-between border-b-2 border-montanoAzulClaro pb-3">
+                    <h2 class="text-2xl font-bold text-montanoAzul flex items-center gap-3">
+                        <i class="fa-solid fa-award text-montanoAmarillo bg-montanoAzul p-2 rounded-lg"></i>
+                        Momento IV: Plenaria, Juego Rítmico e Instrumento de Evaluación (15 min)
+                    </h2>
+                    <span class="bg-montanoAzul text-white font-bold px-3 py-1 rounded-full text-xs">Evaluación Sumativa</span>
+                </div>
+
+                <!-- SIMULADOR Y JUEGO INTERACTIVO EN PIZARRA -->
+                <div class="bg-white p-5 rounded-xl border-2 border-montanoAzul shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-lg text-montanoAzul flex items-center gap-2">
+                                <i class="fa-solid fa-gamepad text-montanoAmarillo"></i> Juego Interactivo: "Desafío Rítmico de la Orquesta"
+                            </h3>
+                            <p class="text-xs text-gray-600">Presiona el botón en el momento exacto en que el ritmo coincida con el compás para ganar puntos para tu equipo.</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-500 font-bold block">Puntaje Orquesta:</span>
+                            <span id="game-score" class="text-2xl font-black text-montanoVerdeOliva">0 pts</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-montanoFondo p-6 rounded-xl border border-montanoVerdeGris flex flex-col items-center justify-center space-y-4 relative overflow-hidden">
+                        <div id="target-zone" class="w-full max-w-md h-12 bg-gray-200 rounded-full border-4 border-montanoAzul relative flex items-center justify-center">
+                            <div id="target-marker" class="absolute w-12 h-full bg-montanoAmarillo rounded-full opacity-70 border-2 border-montanoAzul"></div>
+                            <div id="moving-beat" class="absolute w-6 h-6 bg-red-600 rounded-full shadow-md"></div>
+                        </div>
+
+                        <button onclick="hitBeat()" class="bg-montanoAzul hover:bg-montanoVerdeGris text-white font-black text-lg px-8 py-3 rounded-xl shadow-lg transition active:scale-90 border-b-4 border-montanoAzulClaro">
+                            ¡TOCAR AHORA! 🥁
+                        </button>
+                        <p id="game-feedback" class="text-xs font-bold h-4 text-montanoAzul"></p>
+                    </div>
+                </div>
+
+                <!-- INSTRUMENTO DE EVALUACIÓN: LISTA DE COTEJO DE PLENARIA -->
+                <div class="bg-white p-5 rounded-xl border-2 border-montanoVerdeGris shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h3 class="font-bold text-base text-montanoVerdeGris flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-check"></i> Instrumento de Evaluación: Lista de Cotejo para Ensamble en Plenaria
+                        </h3>
+                        <span class="text-xs text-gray-500">Interactivo - Hacer clic para marcar</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left border-collapse">
+                            <thead>
+                                <tr class="bg-montanoAzul text-white">
+                                    <th class="p-2.5 rounded-tl-lg">Criterio a Evaluar</th>
+                                    <th class="p-2.5 text-center">Sección 1 (Metales)</th>
+                                    <th class="p-2.5 text-center">Sección 2 (Maderas)</th>
+                                    <th class="p-2.5 text-center">Sección 3 (Melódicos)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 bg-montanoFondo">
+                                <tr>
+                                    <td class="p-2.5 font-medium text-gray-800">1. Dominio del pulso y ritmo en conjunto.</td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-medium text-gray-800">2. Atención y respeto a las señales del director.</td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-medium text-gray-800">3. Trabajo colaborativo y sincronía de equipo.</td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-medium text-gray-800">4. Capacidad de corrección y escucha activa (Hábitos Montano).</td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                    <td class="p-2.5 text-center"><input type="checkbox" class="w-4 h-4 accent-montanoAzul cursor-pointer"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-montanoAzul text-white text-center text-xs py-3 mt-6 border-t-2 border-montanoAmarillo">
+        <p>© Colegio Montano - Sistema Pedagógico de Pizarra Digital Interactiva | Formando Líderes con Principios</p>
+    </footer>
+
+    <!-- LÓGICA Y INTERACTIVIDAD EN JAVASCRIPT -->
+    <script>
+        function switchTab(tabId) {
+            // Ocultar todos los contenidos de las pestañas
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('flex');
+            });
+
+            // Desactivar todos los botones de las pestañas
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Mostrar la pestaña seleccionada y activar botón
+            const selectedTab = document.getElementById(tabId);
+            if (selectedTab) {
+                selectedTab.classList.remove('hidden');
+                selectedTab.classList.add('flex');
+            }
+
+            const selectedBtn = document.getElementById('btn-' + tabId);
+            if (selectedBtn) {
+                selectedBtn.classList.add('active');
+            }
+        }
+
+        function toggleFullscreen() {
+            const btnIcon = document.getElementById('fullscreen-icon');
+            const btnText = document.getElementById('fullscreen-text');
+
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    btnIcon.className = "fa-solid fa-compress";
+                    btnText.innerText = "Salir de Pantalla Completa";
+                }).catch(err => {
+                    console.log(`Error al intentar activar pantalla completa: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    btnIcon.className = "fa-solid fa-expand";
+                    btnText.innerText = "Pantalla Completa";
+                }
+            }
+        }
+
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.className = "fa-solid fa-chevron-up text-xs";
+            } else {
+                content.classList.add('hidden');
+                icon.className = "fa-solid fa-chevron-down text-xs";
+            }
+        }
+
+        let metronomeInterval = null;
+        let bpm = 80;
+        let isPlaying = false;
+        let synth = null;
+
+        function initAudio() {
+            if (!synth) {
+                synth = new Tone.Synth().toDestination();
+            }
+            Tone.start();
+        }
+
+        function updateBPM(val) {
+            bpm = val;
+            document.getElementById('bpm-display').innerText = val;
+            if (isPlaying) {
+                stopMetronome();
+                startMetronome();
+            }
+        }
+
+        function toggleMetronome() {
+            initAudio();
+            if (isPlaying) {
+                stopMetronome();
+            } else {
+                startMetronome();
+            }
+        }
+
+        function startMetronome() {
+            isPlaying = true;
+            document.getElementById('metro-txt').innerText = "Detener";
+            document.getElementById('metro-btn').classList.replace('bg-montanoAzul', 'bg-red-600');
+            
+            const intervalMs = (60 / bpm) * 1000;
+            metronomeInterval = setInterval(() => {
+                if (synth) {
+                    synth.triggerAttackRelease("C5", "8n");
+                }
+            }, intervalMs);
+        }
+
+        function stopMetronome() {
+            isPlaying = false;
+            document.getElementById('metro-txt').innerText = "Iniciar Pulso";
+            document.getElementById('metro-btn').classList.replace('bg-red-600', 'bg-montanoAzul');
+            if (metronomeInterval) {
+                clearInterval(metronomeInterval);
+                metronomeInterval = null;
+            }
+        }
+
+        function playNote(note) {
+            initAudio();
+            if (synth) {
+                synth.triggerAttackRelease(note, "8n");
+            }
+        }
+
+        let beatPosition = 0;
+        let beatDirection = 1;
+        let score = 0;
+        let animationFrame = null;
+
+        function animateBeat() {
+            const marker = document.getElementById('moving-beat');
+            if (marker) {
+                beatPosition += 1.5 * beatDirection;
+                if (beatPosition >= 90 || beatPosition <= 0) {
+                    beatDirection *= -1;
+                }
+                marker.style.left = beatPosition + '%';
+            }
+            animationFrame = requestAnimationFrame(animateBeat);
+        }
+
+        function hitBeat() {
+            const feedback = document.getElementById('game-feedback');
+            // La zona objetivo está entre 40% y 60%
+            if (beatPosition >= 38 && beatPosition <= 62) {
+                score += 10;
+                feedback.innerText = "¡EXCELENTE RITMO! (+10 pts)";
+                feedback.className = "text-xs font-bold h-4 text-green-600 animate-bounce";
+            } else {
+                feedback.innerText = "¡Casi! Inténtalo de nuevo.";
+                feedback.className = "text-xs font-bold h-4 text-red-500";
+            }
+            document.getElementById('game-score').innerText = score + " pts";
+        }
+
+        // Iniciar animaciones al cargar la ventana
+        window.onload = function() {
+            animateBeat();
+        };
+    </script>
+</body>
+</html>
